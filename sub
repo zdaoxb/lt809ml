@@ -1,0 +1,105 @@
+yl(){
+if [ $(command -v nginx | grep -c "nginx") -lt 1 -o $(command -v curl | grep -c "curl") -lt 1 -o $(command -v wget | grep -c "wget") -lt 1 ]
+then yum update -y || apt update -y
+yes | yum upgrade || yes | apt upgrade
+yum update -y || apt update -y
+yum install nginx curl wget -y || apt install nginx curl wget -y
+fi
+if [ $(command -v nginx | grep -c "nginx") -lt 1 -o $(command -v curl | grep -c "curl") -lt 1 -o $(command -v wget | grep -c "wget") -lt 1 ]
+then yum install epel-release -y && yum install nginx curl wget -y
+fi
+if [ $(command -v nginx | grep -c "nginx") -lt 1 -o $(command -v curl | grep -c "curl") -lt 1 -o $(command -v wget | grep -c "wget") -lt 1 ]
+then echo "自动检测依赖失败，请检查nginx curl wget是否已安装，如未请手动安装"
+else echo "依赖安装成功"
+fi
+}
+spip(){
+spip=$(curl -s ifconfig.me)
+[ -z "$spip" ] && spip
+echo "获取服务器ip中 $spip"
+}
+nginxport(){
+[ -f ~/lt809ml/nginxport ] && nginxport=":$(cat ~/lt809ml/nginxport)" || nginxport=""
+}
+nginxroot(){
+if [ ! -f ~/lt809ml/nginxroot ]
+then [ $(ps -A | grep "nginx" | wc -l) -eq 0 ] && nginx
+if [ -d /www/server/nginx/html ]
+then echo 1 > /www/server/nginx/html/test
+[ $(curl -s http://127.0.0.1$nginxport/test) -eq 1 ] && nginxroot="/www/server/nginx/html"
+rm -rf /www/server/nginx/html/test
+fi
+if [ -d /var/www/html ]
+then echo 1 > /var/www/html/test
+[ $(curl -s http://127.0.0.1$nginxport/test) -eq 1 ] && nginxroot="/var/www/html"
+rm -rf /var/www/html/test
+fi
+if [ -d /usr/share/nginx/html ]
+then echo 1 > /usr/share/nginx/html/test
+[ $(curl -s http://127.0.0.1$nginxport/test) -eq 1 ] && nginxroot="/usr/share/nginx/html"
+rm -rf /usr/share/nginx/html/test
+fi
+[ -z "$nginxroot" -a -z "$nginxport" ] && echo "nginx网页根目录获取失败，请检查nginx默认端口是否为80，如非80请将端口号写入 nginxport 文件并放入 lt809ml 文件夹后，重新运行脚本" || echo "nginxroot为 $nginxroot"
+[ -z "$nginxroot" -a ! -z "$nginxport" ] && echo "nginx网页根目录获取失败，请检查nginxport $nginxport 是否正确，确定正确请联系脚本作者，或者你知道正确的nginx网页根目录，请将根目录写入 nginxroot 文件并放入 lt809ml 文件夹后，重新运行脚本" || echo "nginxroot为 $nginxroot
+nginxport为 $nginxport"
+else nginxroot=$(cat ~/lt809ml/nginxroot) 
+echo "nginxroot为 $nginxroot"
+[ ! -z "$nginxport" ] && echo "nginxport为 $nginxport"
+fi
+}
+path(){
+fakeid=$(echo $RANDOM | md5sum | cut -c 1-22)
+md5="3d99ff138e1f41e931e58617e7d128e2"
+spid=31117
+pid=31117
+spkey=$(echo -n "if5ax/?fakeid=$fakeid&spid=$spid&pid=$pid&spip=$spip&spport=$spport$md5" | md5sum | cut -d " " -f1)
+url=$(curl -s -X GET -H "Host:dir.wo186.tv:809" -H "User-Agent:Mozilla/5.0 (Linux; Android 11; M2012K11AC) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.104 Mobile Safari/537.36" "http://dir.wo186.tv:809/if5ax/?fakeid=$fakeid&spid=$spid&pid=$pid&spip=$spip&spport=$spport&spkey=$spkey" | grep -o "url.*" | cut -d '"' -f3 | sed 's/\\//g')
+host=$(echo $url | cut -d "/" -f3 | cut -d ":" -f1)
+port=$(echo $url | cut -d "/" -f3 | cut -d ":" -f2)
+ugpid=$(echo $url | grep -o "ugpid.*" | cut -d "&" -f1 | cut -d "=" -f2)
+tradeid=$(echo $url | grep -o "tradeid.*" | cut -d "&" -f1 | cut -d "=" -f2)
+lsttm=$(echo $url | grep -o "lsttm.*" | cut -d "&" -f1 | cut -d "=" -f2)
+enkey=$(echo $url | grep -o "enkey.*" | cut -d "&" -f1 | cut -d "=" -f2)
+}
+if [ $(command -v x-ui | grep -c "x-ui") -lt 1 ]
+then echo 未安装x-ui请先安装x-ui，替换好809专用xray内核，新建ws节点，然后重新运行此脚本
+else [ ! -d ~/lt809ml ] && mkdir ~/lt809ml
+yl
+nginxport
+nginxroot
+spip
+rm -rf ~/lt809ml/conf
+xidz=$(cat /usr/local/x-ui/bin/config.json | grep '"id": "' | cut -d '"' -f4 | wc -l)
+xidi=$((xidz+1))
+xid=$(cat /usr/local/x-ui/bin/config.json | grep '"id": "' | cut -d '"' -f4)
+for ((i=1;i<xidi;i++))
+do
+fid=$(echo "$xid" | sed -n "$i"p)
+xidn=$(cat /usr/local/x-ui/bin/config.json | grep -n "$fid" | cut -d ":" -f1)
+xm=$(cat /usr/local/x-ui/bin/config.json | sed -n $((xidn-4))p | cut -d '"' -f4)
+spport=$(cat /usr/local/x-ui/bin/config.json | sed -n $((xidn-5))p | cut -d '"' -f3 | cut -d " " -f2 | cut -d "," -f1)
+path
+echo "正在处理第$i个$xm $spport节点，共$xidz个"
+if [ "$xm" == "vmess" ]
+then path="/if5ax/?fakeid=$fakeid&spid=$spid&pid=$pid&spip=$spip&spport=$spport&userid=$fakeid&ugpid=$ugpid&tradeid=$tradeid&lsttm=$lsttm&enkey=$enkey"
+enpath=$(echo $path | sed 's/=/\\u003d/g' | sed 's/&/\\u0026/g')
+conf="$xm://$(echo -n "{\"add\":\"$host\",\"aid\":\"0\",\"host\":\"$host\",\"id\":\"$fid\",\"net\":\"ws\",\"path\":\"$enpath\",\"port\":\"$port\",\"ps\":\"联通809免流$lsttm\",\"scy\":\"auto\",\"sni\":\"\",\"tls\":\"\",\"type\":\"\",\"v\":\"2\"}" | base64 -w 0)"
+echo $conf >> ~/lt809ml/conf
+fi
+if [ "$xm" == "vless" ]
+then path="%2Fif5ax%2F%3Ffakeid%3D$fakeid%26spid%3D$spid%26pid%3D$pid%26spip%3D$spip%26spport%3D$spport%26userid%3D$fakeid%26ugpid%3D$ugpid%26tradeid%3D$tradeid%26lsttm%3D$lsttm%26enkey%3D$enkey"
+conf="$xm://$fid@$host:809?path=$path&security=none&encryption=none&host=$host&type=ws#%E8%81%94%E9%80%9A809%E5%85%8D%E6%B5%81$lsttm"
+echo $conf >> ~/lt809ml/conf
+fi
+sleep 0
+done
+cat ~/lt809ml/conf | base64 -w 0 > $nginxroot/809
+wget -O ~/lt809ml/sub https://github.com/zdaoxb/typecho/blob/master/lt809ml/sub
+chmod +x ~/lt809ml/sub
+if [ $(crontab -l | grep "lt809ml/sub" | wc -l) -lt 1 ]
+then crontab -l > crontablist
+echo "0 0-23/3 * * * /root/lt809ml/sub" >> crontablist
+crontab crontablist
+rm -rf crontablist
+fi
+fi
