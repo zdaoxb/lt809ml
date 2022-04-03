@@ -94,7 +94,7 @@ fi
 sleep 0
 done
 cat ~/lt809ml/conf | base64 -w 0 > $nginxroot/809
-wget -O ~/lt809ml/sub https://github.com/zdaoxb/typecho/blob/master/lt809ml/sub
+wget -O ~/lt809ml/sub https://raw.githubusercontent.com/zdaoxb/lt809ml/main/sub
 chmod +x ~/lt809ml/sub
 if [ $(crontab -l | grep "lt809ml/sub" | wc -l) -lt 1 ]
 then crontab -l > crontablist
